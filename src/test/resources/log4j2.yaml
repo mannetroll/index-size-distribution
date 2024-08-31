@@ -1,0 +1,13 @@
+Configuration:
+   Appenders:
+      Console:
+         name: Console_Appender
+         target: SYSTEM_OUT
+         JsonTemplateLayout:
+            eventTemplateUri: classpath:EcsLayout.json
+
+   Loggers:
+      Root:
+         level: info
+         AppenderRef:
+         -  ref: Console_Appender
