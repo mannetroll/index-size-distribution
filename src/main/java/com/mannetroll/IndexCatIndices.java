@@ -1,5 +1,6 @@
 package com.mannetroll;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,20 +45,47 @@ public class IndexCatIndices implements CommandLineRunner {
 		try {
 			// Iterate over each index record and prepare data for indexing
 			for (Map<String, Object> jsonMap : maps) {
+				Map<String, Object> updatedMap = updateKeys(jsonMap);
+				// LOG.info("updatedMap:" + JsonUtil.toPretty(updatedMap));
 
 				// Index the data into a new index, e.g., "stats-indices"
 				IndexRequest<Map<String, Object>> request = IndexRequest
-						.of(i -> i.index("stats-indices").document(jsonMap).refresh(Refresh.True));
+						.of(i -> i.index("stats-indices").document(updatedMap).refresh(Refresh.True));
 
 				IndexResponse response = esClient.index(request);
-				System.out.println("Indexed document ID: " + response.id());
+				LOG.info("Indexed document ID: " + response.id()); //
+
 			}
 
 			// Close the transport, freeing the underlying thread
+		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
+		}
+		try {
 			transport.close();
 		} catch (Exception e) {
 		}
 		System.exit(0);
+	}
+
+	private Map<String, Object> updateKeys(Map<String, Object> map) {
+		// Create a new map to store modified keys
+		Map<String, Object> updatedMap = new HashMap<>();
+
+		// Iterate through the original map
+		for (Map.Entry<String, Object> entry : map.entrySet()) {
+			// Replace "." with "_" in the key
+			String newKey = entry.getKey().replace('.', '_');
+
+			if (newKey.contains("size") || newKey.contains("docs") || newKey.contains("pri")
+					|| newKey.contains("rep")) {
+				long parseLong = Long.parseLong(entry.getValue().toString());
+				updatedMap.put(newKey, parseLong);
+			} else {
+				updatedMap.put(newKey, entry.getValue());
+			}
+		}
+		return updatedMap;
 	}
 
 	public static void main(String[] args) {
