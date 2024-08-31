@@ -16,9 +16,34 @@
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss.SSS</maven.build.timestamp.format>
     <buildDate>${maven.build.timestamp}</buildDate>
     <log4j2.version>2.19.0</log4j2.version>
-    <start-class>com.mannetroll.EcsApp</start-class>
+    <start-class>com.mannetroll.IndexCatIndices</start-class>
   </properties>
   <dependencies>
+    <dependency>
+       <groupId>org.elasticsearch.client</groupId>
+       <artifactId>elasticsearch-rest-client</artifactId>
+       <version>8.15.0</version> 
+    </dependency>	  
+    <dependency>
+        <groupId>co.elastic.clients</groupId>
+        <artifactId>elasticsearch-java</artifactId>
+        <version>8.15.0</version>
+      </dependency>
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.17.0</version>
+    </dependency>
+    <dependency>
+       <groupId>jakarta.json</groupId>
+       <artifactId>jakarta.json-api</artifactId>
+       <version>2.1.3</version>
+    </dependency>
+    <dependency>
+       <groupId>com.fasterxml.jackson.core</groupId>
+       <artifactId>jackson-core</artifactId>
+        <version>2.17.0</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-layout-template-json</artifactId>
