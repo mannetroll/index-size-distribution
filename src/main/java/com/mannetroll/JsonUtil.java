@@ -1,4 +1,4 @@
-package com.mannetroll.util;
+package com.mannetroll;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -15,7 +15,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.mannetroll.elastic.IndexDocument;
 
 /**
  * @author mannetroll
@@ -59,17 +58,8 @@ public class JsonUtil {
 
 	public static List<Map<String, Object>> parseMapList(String json) {
 		try {
-			return mapper.readValue(json, new TypeReference<List<Map<String, Object>>>() {});
-		} catch (IOException e) {
-			LOGGER.error(e.getMessage(), e);
-			return null;
-		}
-	}
-
-	
-	public static IndexDocument parseIndexDocument(String json) {
-		try {
-			return mapper.readValue(json, IndexDocument.class);
+			return mapper.readValue(json, new TypeReference<List<Map<String, Object>>>() {
+			});
 		} catch (IOException e) {
 			LOGGER.error(e.getMessage(), e);
 			return null;

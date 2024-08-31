@@ -13,8 +13,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import com.mannetroll.util.JsonUtil;
-
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
@@ -77,13 +75,33 @@ public class IndexCatIndices implements CommandLineRunner {
 			// Replace "." with "_" in the key
 			String newKey = entry.getKey().replace('.', '_');
 
+			Object value = entry.getValue();
 			if (newKey.contains("size") || newKey.contains("docs") || newKey.contains("pri")
 					|| newKey.contains("rep")) {
-				long parseLong = Long.parseLong(entry.getValue().toString());
+				long parseLong = Long.parseLong(value.toString());
 				updatedMap.put(newKey, parseLong);
 			} else {
-				updatedMap.put(newKey, entry.getValue());
+				updatedMap.put(newKey, value);
 			}
+
+			//
+			// category
+			//
+			String key = entry.getKey();
+			if (key.equals("index")) {
+				if (value.toString().contains("ls-mandel")) {
+					updatedMap.put("category", "mandel");
+				} else if (value.toString().contains("ls-varnish")) {
+					updatedMap.put("category", "varnish");
+				} else if (value.toString().contains("ds-logs-apm")) {
+					updatedMap.put("category", "apm-logs");
+				} else if (value.toString().contains("ds-metrics-apm")) {
+					updatedMap.put("category", "apm-metrics");
+				} else if (value.toString().contains("ds-traces-apm")) {
+					updatedMap.put("category", "apm-traces");
+				}
+			}
+
 		}
 		return updatedMap;
 	}
