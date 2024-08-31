@@ -2,11 +2,16 @@ package com.mannetroll.util;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -32,6 +37,15 @@ public class JsonUtil {
 		pretty.enable(SerializationFeature.INDENT_OUTPUT);
 	}
 
+	public static String getFile(String file) {
+		try {
+			return new String(Files.readAllBytes(Paths.get(file).toAbsolutePath()));
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	public static String toJson(Object object) {
 		try {
 			StringWriter sw = new StringWriter();
@@ -43,6 +57,16 @@ public class JsonUtil {
 		}
 	}
 
+	public static List<Map<String, Object>> parseMapList(String json) {
+		try {
+			return mapper.readValue(json, new TypeReference<List<Map<String, Object>>>() {});
+		} catch (IOException e) {
+			LOGGER.error(e.getMessage(), e);
+			return null;
+		}
+	}
+
+	
 	public static IndexDocument parseIndexDocument(String json) {
 		try {
 			return mapper.readValue(json, IndexDocument.class);
