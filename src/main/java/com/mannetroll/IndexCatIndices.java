@@ -45,6 +45,7 @@ public class IndexCatIndices implements CommandLineRunner {
 			for (Map<String, Object> jsonMap : maps) {
 				Map<String, Object> updatedMap = updateKeys(jsonMap);
 				// LOG.info("updatedMap:" + JsonUtil.toPretty(updatedMap));
+				updatedMap.put("@timestamp", "2024-08-30");
 
 				// Index the data into a new index, e.g., "stats-indices"
 				IndexRequest<Map<String, Object>> request = IndexRequest
