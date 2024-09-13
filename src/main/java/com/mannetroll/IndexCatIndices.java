@@ -8,6 +8,7 @@ import org.apache.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.client.RestClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,6 +25,9 @@ import co.elastic.clients.transport.rest_client.RestClientTransport;
 public class IndexCatIndices implements CommandLineRunner {
 	private static final Logger LOG = LogManager.getLogger(IndexCatIndices.class);
 	private static ConfigurableApplicationContext context;
+
+	@Autowired
+	private ServiceProperties config;
 
 	@Override
 	public void run(String... args) {
@@ -88,18 +92,10 @@ public class IndexCatIndices implements CommandLineRunner {
 			//
 			// category
 			//
-			String key = entry.getKey();
-			if (key.equals("index")) {
-				if (value.toString().contains("ls-mandel")) {
-					updatedMap.put("category", "mandel");
-				} else if (value.toString().contains("ls-varnish")) {
-					updatedMap.put("category", "varnish");
-				} else if (value.toString().contains("ds-logs-apm")) {
-					updatedMap.put("category", "apm-logs");
-				} else if (value.toString().contains("ds-metrics-apm")) {
-					updatedMap.put("category", "apm-metrics");
-				} else if (value.toString().contains("ds-traces-apm")) {
-					updatedMap.put("category", "apm-traces");
+			List<String> list = config.getCategory();
+			for (String category : list) {
+				if (value.toString().contains(category)) {
+					updatedMap.put("category", category);
 				}
 			}
 

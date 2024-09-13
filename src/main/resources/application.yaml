@@ -1,0 +1,4 @@
+app.category:
+ - ds-logs-apm
+ - ds-metrics-apm
+ - ds-traces-apm
