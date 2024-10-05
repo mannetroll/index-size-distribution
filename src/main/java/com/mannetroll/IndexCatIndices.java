@@ -1,8 +1,11 @@
 package com.mannetroll;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
@@ -40,29 +43,36 @@ public class IndexCatIndices implements CommandLineRunner {
 		// Create the Elasticsearch client
 		ElasticsearchClient esClient = new ElasticsearchClient(transport);
 
-		String json = JsonUtil.getFile("json/tv-tech-prod-20240831.json");
-		List<Map<String, Object>> maps = JsonUtil.parseMapList(json);
-		LOG.info("maps: " + maps.size());
+		String[] stringArray = { "2024-08-31", "2024-09-05", "2024-09-13", "2024-09-21", "2024-09-27", "2024-10-02",
+				"2024-10-03", "2024-10-04" };
+		Set<String> dates = new TreeSet<>(Arrays.asList(stringArray));
 
-		try {
-			// Iterate over each index record and prepare data for indexing
-			for (Map<String, Object> jsonMap : maps) {
-				Map<String, Object> updatedMap = updateKeys(jsonMap);
-				// LOG.info("updatedMap:" + JsonUtil.toPretty(updatedMap));
-				updatedMap.put("@timestamp", "2024-08-30");
+		for (String date : dates) {
+			String tmp = date.replace("-", "");
+			String json = JsonUtil.getFile("json/tv-tech-prod-" + tmp + ".json");
+			List<Map<String, Object>> maps = JsonUtil.parseMapList(json);
+			LOG.info("maps: " + maps.size());
 
-				// Index the data into a new index, e.g., "stats-indices"
-				IndexRequest<Map<String, Object>> request = IndexRequest
-						.of(i -> i.index("stats-indices").document(updatedMap).refresh(Refresh.True));
+			try {
+				// Iterate over each index record and prepare data for indexing
+				for (Map<String, Object> jsonMap : maps) {
+					Map<String, Object> updatedMap = updateKeys(jsonMap);
+					// LOG.info("updatedMap:" + JsonUtil.toPretty(updatedMap));
+					updatedMap.put("@timestamp", date);
 
-				IndexResponse response = esClient.index(request);
-				LOG.info("Indexed document ID: " + response.id()); //
+					// Index the data into a new index, e.g., "stats-indices"
+					IndexRequest<Map<String, Object>> request = IndexRequest
+							.of(i -> i.index("stats-indices").document(updatedMap).refresh(Refresh.True));
 
+					IndexResponse response = esClient.index(request);
+					LOG.info(date + ": indexed document ID: " + response.id()); //
+
+				}
+
+				// Close the transport, freeing the underlying thread
+			} catch (Exception e) {
+				LOG.error(e.getMessage(), e);
 			}
-
-			// Close the transport, freeing the underlying thread
-		} catch (Exception e) {
-			LOG.error(e.getMessage(), e);
 		}
 		try {
 			transport.close();
@@ -74,6 +84,7 @@ public class IndexCatIndices implements CommandLineRunner {
 	private Map<String, Object> updateKeys(Map<String, Object> map) {
 		// Create a new map to store modified keys
 		Map<String, Object> updatedMap = new HashMap<>();
+		Map<String, Long> calcMap = new HashMap<>();
 
 		// Iterate through the original map
 		for (Map.Entry<String, Object> entry : map.entrySet()) {
@@ -84,22 +95,37 @@ public class IndexCatIndices implements CommandLineRunner {
 			if (newKey.contains("size") || newKey.contains("docs") || newKey.contains("pri")
 					|| newKey.contains("rep")) {
 				long parseLong = Long.parseLong(value.toString());
+				calcMap.put(newKey, parseLong);
 				updatedMap.put(newKey, parseLong);
 			} else {
 				updatedMap.put(newKey, value);
 			}
 
-			//
-			// category
-			//
-			List<String> list = config.getCategory();
-			for (String category : list) {
-				if (value.toString().contains(category)) {
-					updatedMap.put("category", category);
+			if (entry.getKey().toString().contains("index")) {
+				//
+				// category
+				//
+				List<String> list = config.getCategory();
+				for (String category : list) {
+					if (value.toString().contains(category)) {
+						updatedMap.put("category", category);
+					}
+				}
+				if (value.toString().contains("partial")) {
+					updatedMap.put("frozen", true);
+				} else {
+					updatedMap.put("frozen", false);
 				}
 			}
 
 		}
+		//
+		// bytes per doc
+		//
+		Long dataset_size = calcMap.get("dataset_size");
+		Long docs_count = calcMap.get("docs_count");
+		updatedMap.put("bytes_per_doc", Long.valueOf(dataset_size / (1 + docs_count)));
+
 		return updatedMap;
 	}
 
